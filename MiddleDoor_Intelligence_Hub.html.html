@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0a0f0d">
+<title>Middle Door · RE Intelligence</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0f0d;
+  --bg2: #111a15;
+  --bg3: #172010;
+  --surface: #1a2b1f;
+  --surface2: #203828;
+  --border: rgba(74,200,120,0.12);
+  --border2: rgba(74,200,120,0.22);
+  --green: #3ecf70;
+  --green-dim: #1d9e75;
+  --green-dark: #0f6e56;
+  --green-glow: rgba(62,207,112,0.15);
+  --amber: #f5a623;
+  --amber-dim: rgba(245,166,35,0.15);
+  --red: #f04438;
+  --red-dim: rgba(240,68,56,0.12);
+  --text: #e8f5ec;
+  --text2: #8ab49a;
+  --text3: #5a7a66;
+  --serif: 'DM Serif Display', Georgia, serif;
+  --sans: 'Outfit', system-ui, sans-serif;
+  --mono: 'DM Mono', monospace;
+  --r: 10px;
+  --r2: 16px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { height: 100%; }
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── LAYOUT ── */
+.app { display: flex; flex-direction: column; min-height: 100vh; }
+
+/* ── TOPBAR ── */
+.topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 20px;
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; z-index: 100;
+  backdrop-filter: blur(12px);
+}
+.logo-area { display: flex; align-items: center; gap: 10px; }
+.logo-mark {
+  width: 32px; height: 32px; border-radius: 8px;
+  background: var(--green-dark);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+}
+.logo-text { font-family: var(--serif); font-size: 18px; color: var(--text); }
+.logo-sub { font-size: 11px; color: var(--text3); font-family: var(--mono); letter-spacing: .04em; }
+.topbar-right { display: flex; align-items: center; gap: 10px; }
+.date-pill {
+  font-size: 11px; font-family: var(--mono); color: var(--text3);
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 20px; padding: 4px 12px;
+}
+.api-badge {
+  font-size: 11px; font-family: var(--mono);
+  padding: 4px 10px; border-radius: 20px;
+  border: 1px solid var(--border2); cursor: pointer;
+  transition: all .2s;
+}
+.api-badge.set { color: var(--green); border-color: var(--green-dim); }
+.api-badge.unset { color: var(--amber); border-color: var(--amber-dim); }
+.api-badge:hover { background: var(--surface); }
+
+/* ── NAV TABS ── */
+.nav {
+  display: flex; gap: 0;
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  overflow-x: auto; scrollbar-width: none;
+}
+.nav::-webkit-scrollbar { display: none; }
+.nav-tab {
+  flex-shrink: 0;
+  font-size: 13px; font-family: var(--sans); font-weight: 400;
+  color: var(--text3); background: none; border: none;
+  padding: 12px 18px;
+  cursor: pointer; transition: all .15s;
+  border-bottom: 2px solid transparent;
+  display: flex; align-items: center; gap: 6px;
+  white-space: nowrap;
+}
+.nav-tab svg { width: 15px; height: 15px; }
+.nav-tab:hover { color: var(--text2); }
+.nav-tab.active { color: var(--green); border-bottom-color: var(--green); }
+
+/* ── MAIN CONTENT ── */
+.main { flex: 1; padding: 20px; max-width: 900px; margin: 0 auto; width: 100%; }
+.panel { display: none; }
+.panel.active { display: block; }
+
+/* ── API KEY MODAL ── */
+.modal-overlay {
+  display: none; position: fixed; inset: 0; z-index: 200;
+  background: rgba(10,15,13,0.85); backdrop-filter: blur(8px);
+  align-items: center; justify-content: center; padding: 20px;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: var(--bg2); border: 1px solid var(--border2);
+  border-radius: var(--r2); padding: 28px; width: 100%; max-width: 440px;
+}
+.modal h3 { font-family: var(--serif); font-size: 20px; margin-bottom: 8px; color: var(--text); }
+.modal p { font-size: 13px; color: var(--text2); line-height: 1.6; margin-bottom: 18px; }
+.modal-note { font-size: 12px; color: var(--text3); background: var(--bg3); border-radius: var(--r); padding: 10px 14px; margin-bottom: 18px; line-height: 1.5; }
+.modal input {
+  width: 100%; padding: 11px 14px;
+  background: var(--bg); border: 1px solid var(--border2);
+  border-radius: var(--r); font-size: 14px; color: var(--text);
+  font-family: var(--mono); margin-bottom: 12px; outline: none;
+  transition: border-color .2s;
+}
+.modal input:focus { border-color: var(--green-dim); }
+.modal-btns { display: flex; gap: 8px; }
+.btn-primary {
+  flex: 1; padding: 11px; background: var(--green-dark);
+  color: #fff; border: none; border-radius: var(--r);
+  font-size: 14px; font-family: var(--sans); font-weight: 500;
+  cursor: pointer; transition: background .2s;
+}
+.btn-primary:hover { background: var(--green-dim); }
+.btn-ghost {
+  padding: 11px 18px; background: none;
+  border: 1px solid var(--border2); border-radius: var(--r);
+  color: var(--text2); font-size: 14px; cursor: pointer;
+  font-family: var(--sans); transition: all .2s;
+}
+.btn-ghost:hover { border-color: var(--border2); background: var(--surface); }
+
+/* ── BRIEF PANEL ── */
+.brief-config {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--r2); padding: 20px; margin-bottom: 16px;
+}
+.config-label {
+  font-size: 11px; font-family: var(--mono); color: var(--text3);
+  letter-spacing: .06em; text-transform: uppercase; margin-bottom: 12px;
+}
+.mode-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(140px,1fr));
+  gap: 8px; margin-bottom: 18px;
+}
+.mode-btn {
+  padding: 12px; background: var(--bg);
+  border: 1px solid var(--border); border-radius: var(--r);
+  cursor: pointer; transition: all .15s; text-align: left;
+}
+.mode-btn.sel { border-color: var(--green-dim); background: rgba(62,207,112,0.06); }
+.mode-btn-label {
+  font-size: 13px; font-weight: 500; color: var(--text2);
+  display: flex; align-items: center; gap: 6px; margin-bottom: 3px;
+}
+.mode-btn.sel .mode-btn-label { color: var(--green); }
+.mode-btn-sub { font-size: 11px; color: var(--text3); line-height: 1.4; }
+
+.mkt-filter-area { margin-bottom: 18px; }
+.mkt-filter-top { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.mkt-select {
+  flex: 1; padding: 9px 12px;
+  background: var(--bg); border: 1px solid var(--border2);
+  border-radius: var(--r); font-size: 13px; color: var(--text2);
+  font-family: var(--sans); cursor: pointer; outline: none;
+  max-width: 300px;
+}
+.clear-btn {
+  font-size: 12px; color: var(--text3); background: none;
+  border: none; cursor: pointer; font-family: var(--mono);
+  padding: 4px 0; transition: color .15s;
+}
+.clear-btn:hover { color: var(--green); }
+.sel-mkt-list { display: flex; flex-wrap: wrap; gap: 6px; }
+.sel-mkt-pill {
+  font-size: 12px; font-family: var(--mono);
+  padding: 4px 10px; border-radius: 20px;
+  background: rgba(62,207,112,0.08); border: 1px solid rgba(62,207,112,0.25);
+  color: var(--green); display: flex; align-items: center; gap: 5px;
+}
+.sel-mkt-pill button {
+  background: none; border: none; color: var(--green-dim);
+  cursor: pointer; font-size: 12px; padding: 0; line-height: 1;
+}
+
+.gen-btn {
+  width: 100%; padding: 13px;
+  background: var(--green-dark); color: #fff;
+  border: none; border-radius: var(--r);
+  font-size: 15px; font-weight: 500; font-family: var(--sans);
+  cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
+  transition: all .2s;
+}
+.gen-btn:hover:not(:disabled) { background: var(--green-dim); }
+.gen-btn:disabled { opacity: .45; cursor: not-allowed; }
+
+.status-bar {
+  display: none; align-items: center; gap: 10px;
+  padding: 12px 16px;
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--r); margin-bottom: 14px;
+  font-size: 13px; color: var(--text2); font-family: var(--mono);
+}
+.spinner {
+  width: 14px; height: 14px; flex-shrink: 0;
+  border: 2px solid var(--surface2); border-top-color: var(--green);
+  border-radius: 50%; animation: spin .7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.err-bar {
+  display: none; padding: 12px 16px;
+  background: var(--red-dim); border: 1px solid rgba(240,68,56,0.3);
+  border-radius: var(--r); margin-bottom: 14px;
+  font-size: 13px; color: #f97066;
+}
+
+/* ── BRIEFING OUTPUT ── */
+.brief-out { display: none; }
+.brief-headline {
+  font-family: var(--serif); font-size: 26px; line-height: 1.25;
+  color: var(--text); margin-bottom: 4px;
+}
+.brief-meta {
+  font-size: 12px; font-family: var(--mono); color: var(--text3);
+  margin-bottom: 20px;
+}
+
+.b-section { margin-bottom: 8px; }
+.b-hdr {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 13px 16px;
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--r2); cursor: pointer; transition: background .12s;
+}
+.b-hdr:hover { background: var(--surface); }
+.b-hdr.open { border-radius: var(--r2) var(--r2) 0 0; border-bottom-color: transparent; }
+.b-left { display: flex; align-items: center; gap: 11px; }
+.b-ico {
+  width: 30px; height: 30px; border-radius: 8px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; font-size: 15px;
+}
+.b-label { font-size: 14px; font-weight: 500; color: var(--text); }
+.b-snip { font-size: 12px; color: var(--text3); margin-top: 2px; }
+.b-chev {
+  width: 18px; height: 18px; flex-shrink: 0;
+  color: var(--text3); transition: transform .2s;
+}
+.b-chev.open { transform: rotate(180deg); }
+
+.b-body {
+  display: none;
+  padding: 16px; font-size: 14px; line-height: 1.75; color: var(--text2);
+  background: var(--bg2); border: 1px solid var(--border); border-top: none;
+  border-radius: 0 0 var(--r2) var(--r2);
+}
+.b-body.open { display: block; }
+.b-body p { margin-bottom: 10px; }
+.b-body p:last-child { margin-bottom: 0; }
+
+.pill-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 14px; }
+.pill {
+  font-size: 11px; font-family: var(--mono);
+  padding: 3px 10px; border-radius: 20px;
+}
+.p-high { background: rgba(240,68,56,0.12); color: #f97066; border: 1px solid rgba(240,68,56,0.2); }
+.p-med { background: rgba(245,166,35,0.1); color: var(--amber); border: 1px solid rgba(245,166,35,0.2); }
+.p-low { background: rgba(62,207,112,0.08); color: var(--green); border: 1px solid rgba(62,207,112,0.2); }
+.p-tag { background: var(--bg); color: var(--text3); border: 1px solid var(--border2); }
+
+.ask-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  margin-top: 14px; padding: 7px 14px;
+  background: none; border: 1px solid var(--green-dim);
+  border-radius: var(--r); font-size: 12px; color: var(--green);
+  font-family: var(--mono); cursor: pointer; transition: all .15s;
+}
+.ask-btn:hover { background: rgba(62,207,112,0.08); }
+
+/* ── MARKETS PANEL ── */
+.filter-bar {
+  display: flex; gap: 6px; flex-wrap: wrap;
+  margin-bottom: 16px; align-items: center;
+}
+.filter-bar-label { font-size: 12px; color: var(--text3); font-family: var(--mono); }
+.f-btn {
+  font-size: 11px; font-family: var(--mono);
+  padding: 5px 12px; border-radius: 20px;
+  border: 1px solid var(--border2); background: none;
+  color: var(--text3); cursor: pointer; transition: all .12s;
+}
+.f-btn.active { border-color: var(--green-dim); background: rgba(62,207,112,0.08); color: var(--green); }
+.f-btn:hover { color: var(--text2); }
+
+.mkt-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px,1fr));
+  gap: 10px;
+}
+.mkt-card {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--r2); padding: 14px;
+  transition: border-color .15s;
+}
+.mkt-card:hover { border-color: var(--border2); }
+.mkt-card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+.mkt-rank { font-size: 11px; font-family: var(--mono); color: var(--text3); }
+.mkt-stars { font-size: 11px; color: var(--green); }
+.mkt-name { font-size: 14px; font-weight: 500; color: var(--text); margin-bottom: 2px; }
+.mkt-state { font-size: 11px; font-family: var(--mono); color: var(--text3); margin-bottom: 10px; }
+.score-bar { height: 2px; background: var(--surface); border-radius: 2px; margin-bottom: 10px; }
+.score-fill { height: 2px; border-radius: 2px; background: var(--green-dim); }
+.mkt-row { display: flex; justify-content: space-between; font-size: 12px; padding: 3px 0; }
+.mkt-key { color: var(--text3); }
+.mkt-val { color: var(--text2); font-family: var(--mono); font-size: 11px; }
+.mkt-zips {
+  font-size: 10px; font-family: var(--mono);
+  color: var(--green); background: rgba(62,207,112,0.06);
+  border-radius: 6px; padding: 5px 8px; margin-top: 8px; line-height: 1.5;
+}
+
+/* ── SOURCES PANEL ── */
+.src-section { margin-bottom: 24px; }
+.src-cadence-label {
+  font-size: 11px; font-family: var(--mono); letter-spacing: .06em;
+  text-transform: uppercase; color: var(--text3);
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 10px; padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+.cdot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.src-row {
+  display: flex; gap: 12px; padding: 12px 14px;
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--r); margin-bottom: 8px;
+  transition: border-color .12s;
+}
+.src-row:hover { border-color: var(--border2); }
+.src-ico {
+  width: 30px; height: 30px; border-radius: 8px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; font-size: 14px;
+}
+.src-name { font-size: 13px; font-weight: 500; color: var(--text); margin-bottom: 3px; }
+.src-desc { font-size: 12px; color: var(--text3); line-height: 1.5; }
+.src-tags { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 6px; }
+.src-tag {
+  font-size: 10px; font-family: var(--mono);
+  padding: 2px 8px; border-radius: 20px;
+  background: var(--bg); border: 1px solid var(--border2); color: var(--text3);
+}
+
+/* ── HABITS PANEL ── */
+.habit-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px,1fr));
+  gap: 10px;
+}
+.habit-card {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--r2); padding: 16px;
+}
+.h-icon {
+  width: 32px; height: 32px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; margin-bottom: 10px;
+}
+.h-title { font-size: 13px; font-weight: 500; color: var(--text); margin-bottom: 5px; }
+.h-sub { font-size: 12px; color: var(--text3); line-height: 1.6; }
+.h-freq {
+  display: inline-block; margin-top: 10px;
+  font-size: 10px; font-family: var(--mono);
+  padding: 3px 10px; border-radius: 20px;
+}
+
+/* ── SETTINGS PANEL ── */
+.settings-card {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--r2); padding: 20px; margin-bottom: 16px;
+}
+.settings-card h3 { font-size: 14px; font-weight: 500; color: var(--text); margin-bottom: 4px; }
+.settings-card p { font-size: 13px; color: var(--text3); margin-bottom: 16px; line-height: 1.6; }
+.settings-input {
+  width: 100%; padding: 10px 14px;
+  background: var(--bg); border: 1px solid var(--border2);
+  border-radius: var(--r); font-size: 13px; color: var(--text);
+  font-family: var(--mono); margin-bottom: 10px; outline: none;
+  transition: border-color .2s;
+}
+.settings-input:focus { border-color: var(--green-dim); }
+.key-status { font-size: 12px; font-family: var(--mono); margin-top: 4px; }
+.key-status.ok { color: var(--green); }
+.key-status.none { color: var(--amber); }
+
+/* ── MOBILE ── */
+@media (max-width: 600px) {
+  .main { padding: 14px; }
+  .brief-headline { font-size: 20px; }
+  .mkt-grid { grid-template-columns: 1fr 1fr; }
+  .habit-grid { grid-template-columns: 1fr; }
+  .logo-sub { display: none; }
+  .date-pill { display: none; }
+  .mode-grid { grid-template-columns: 1fr 1fr; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- TOPBAR -->
+<header class="topbar">
+  <div class="logo-area">
+    <div class="logo-mark">🏢</div>
+    <div>
+      <div class="logo-text">Middle Door</div>
+      <div class="logo-sub">RE Intelligence Hub</div>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div class="date-pill" id="datePill"></div>
+    <button class="api-badge unset" id="apiToggle" onclick="openModal()">⚙ API Key</button>
+  </div>
+</header>
+
+<!-- NAV -->
+<nav class="nav">
+  <button class="nav-tab active" onclick="sw('brief',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
+    Daily Brief
+  </button>
+  <button class="nav-tab" onclick="sw('markets',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+    30 Markets
+  </button>
+  <button class="nav-tab" onclick="sw('sources',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+    Sources
+  </button>
+  <button class="nav-tab" onclick="sw('habits',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+    Habits
+  </button>
+  <button class="nav-tab" onclick="sw('settings',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+    Settings
+  </button>
+</nav>
+
+<!-- API KEY MODAL -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <h3>Anthropic API Key</h3>
+    <p>Your key is stored locally in your browser only — never sent anywhere except Anthropic's API directly from your device.</p>
+    <div class="modal-note">Get a free key at console.anthropic.com → API Keys. You'll need to add credit ($5 minimum) to enable web search in the briefings.</div>
+    <input type="password" id="modalKeyInput" placeholder="sk-ant-api03-..." />
+    <div class="modal-btns">
+      <button class="btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn-primary" onclick="saveKey()">Save key</button>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<main class="main">
+
+  <!-- ── BRIEF ── -->
+  <div class="panel active" id="panel-brief">
+    <div class="brief-config">
+      <div class="config-label">Briefing mode</div>
+      <div class="mode-grid">
+        <button class="mode-btn sel" data-mode="morning" onclick="selMode(this)">
+          <div class="mode-btn-label">🌅 Morning</div>
+          <div class="mode-btn-sub">CoStar · WSJ RE · GlobeSt · Bisnow DFW</div>
+        </button>
+        <button class="mode-btn" data-mode="midday" onclick="selMode(this)">
+          <div class="mode-btn-label">☀️ Midday</div>
+          <div class="mode-btn-sub">Real Deal · CBRE · M&M · Deal memos</div>
+        </button>
+        <button class="mode-btn" data-mode="evening" onclick="selMode(this)">
+          <div class="mode-btn-label">🌙 Evening</div>
+          <div class="mode-btn-sub">Howard Marks · Economist · Linneman</div>
+        </button>
+        <button class="mode-btn" data-mode="weekly" onclick="selMode(this)">
+          <div class="mode-btn-label">📚 Weekly</div>
+          <div class="mode-btn-sub">ULI · NAIOP · REG blog · Local</div>
+        </button>
+      </div>
+
+      <div class="mkt-filter-area">
+        <div class="config-label" style="margin-bottom:8px">Focus markets <span style="color:var(--text3);text-transform:none;font-size:11px">(optional · max 5)</span></div>
+        <div class="mkt-filter-top">
+          <select class="mkt-select" id="mktSel" onchange="addMkt(this.value)">
+            <option value="">— add a market to focus —</option>
+          </select>
+          <button class="clear-btn" onclick="clearMkts()">clear</button>
+        </div>
+        <div class="sel-mkt-list" id="selMktList"></div>
+      </div>
+
+      <button class="gen-btn" id="genBtn" onclick="runBriefing()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        Generate today's briefing
+      </button>
+    </div>
+
+    <div class="status-bar" id="statusBar">
+      <div class="spinner"></div>
+      <span id="statusTxt">Scanning sources...</span>
+    </div>
+    <div class="err-bar" id="errBar"></div>
+    <div class="brief-out" id="briefOut"></div>
+  </div>
+
+  <!-- ── MARKETS ── -->
+  <div class="panel" id="panel-markets">
+    <div class="filter-bar">
+      <span class="filter-bar-label">Filter:</span>
+      <button class="f-btn active" onclick="filt('all',this)">All 30</button>
+      <button class="f-btn" onclick="filt('5star',this)">★★★★★</button>
+      <button class="f-btn" onclick="filt('4star',this)">★★★★</button>
+      <button class="f-btn" onclick="filt('TX',this)">Texas</button>
+      <button class="f-btn" onclick="filt('OH',this)">Ohio</button>
+      <button class="f-btn" onclick="filt('TN',this)">Tennessee</button>
+      <button class="f-btn" onclick="filt('OK',this)">Oklahoma</button>
+      <button class="f-btn" onclick="filt('FL',this)">Florida</button>
+      <button class="f-btn" onclick="filt('MO',this)">Missouri</button>
+    </div>
+    <div class="mkt-grid" id="mktGrid"></div>
+  </div>
+
+  <!-- ── SOURCES ── -->
+  <div class="panel" id="panel-sources">
+    <div class="src-section">
+      <div class="src-cadence-label"><div class="cdot" style="background:#3ecf70"></div>Morning daily — 15 min</div>
+      <div class="src-row"><div class="src-ico" style="background:rgba(62,207,112,0.1)">🏙</div><div><div class="src-name">CoStar News</div><div class="src-desc">Best daily CRE transaction wire — deals, cap rate moves across all asset classes</div><div class="src-tags"><span class="src-tag">deals</span><span class="src-tag">cap rates</span><span class="src-tag">all asset classes</span></div></div></div>
+      <div class="src-row"><div class="src-ico" style="background:rgba(62,207,112,0.1)">📍</div><div><div class="src-name">Bisnow DFW/Texas</div><div class="src-desc">Local deals, groundbreakings, people moves — hyperlocal DFW/Texas texture</div><div class="src-tags"><span class="src-tag">DFW</span><span class="src-tag">Texas</span><span class="src-tag">hyperlocal</span></div></div></div>
+      <div class="src-row"><div class="src-ico" style="background:rgba(62,207,112,0.1)">📈</div><div><div class="src-name">GlobeSt.com</div><div class="src-desc">CRE news across multifamily, office, industrial — value-add deal flow and asset class trends</div><div class="src-tags"><span class="src-tag">multifamily</span><span class="src-tag">value-add</span><span class="src-tag">industrial</span></div></div></div>
+      <div class="src-row"><div class="src-ico" style="background:rgba(62,207,112,0.1)">📰</div><div><div class="src-name">WSJ Real Estate</div><div class="src-desc">Macro + institutional RE: debt markets, REIT moves, Fed policy — highest signal-to-noise</div><div class="src-tags"><span class="src-tag">macro</span><span class="src-tag">REITs</span><span class="src-tag">Fed policy</span></div></div></div>
+    </div>
+    <div class="src-section">
+      <div class="src-cadence-label"><div class="cdot" style="background:#f5a623"></div>Midday 3x/week — 10 min</div>
+      <div class="src-row"><div class="src-ico" style="background:rgba(245,166,35,0.1)">📋</div><div><div class="src-name">The Real Deal</div><div class="src-desc">Transaction detail, sponsor profiles, deal breakdowns — see how others structure acquisitions and what goes wrong</div><div class="src-tags"><span class="src-tag">deal structure</span><span class="src-tag">sponsors</span><span class="src-tag">Mon/Wed/Fri</span></div></div></div>
+      <div class="src-row"><div class="src-ico" style="background:rgba(245,166,35,0.1)">📊</div><div><div class="src-name">CBRE Market Reports</div><div class="src-desc">Quarterly rent, vacancy, cap rate data — bookmark DFW/TX and all 30 target markets</div><div class="src-tags"><span class="src-tag">data</span><span class="src-tag">quarterly</span><span class="src-tag">cap rates</span></div></div></div>
+      <div class="src-row"><div class="src-ico" style="background:rgba(245,166,35,0.1)">🏠</div><div><div class="src-name">Marcus & Millichap Research</div><div class="src-desc">Multifamily and mid-market focused — strong comp context across all 30 target markets</div><div class="src-tags"><span class="src-tag">multifamily</span><span class="src-tag">comps</span><span class="src-tag">mid-market</span></div></div></div>
+      <div class="src-row"><div class="src-ico" style="background:rgba(245,166,35,0.1)">📑</div><div><div class="src-name">CrowdStreet / RealCrowd</div><div class="src-desc">Live sponsor deal memos — underwrite 1 offering per week; builds memo-reading speed and assumption discipline</div><div class="src-tags"><span class="src-tag">deal memos</span><span class="src-tag">underwriting</span><span class="src-tag">weekly</span></div></div></div>
+    </div>
+    <div class="src-section">
+      <div class="src-cadence-label"><div class="cdot" style="background:#a78bfa"></div>Evening Tue/Thu + weekend — 15 min</div>
+      <div class="src-row"><div class="src-ico" style="background:rgba(167,139,250,0.1)">🧠</div><div><div class="src-name">Howard Marks / Oaktree</div><div class="src-desc">Risk, cycles, market psychology — read every new memo day of release; foundational mental model</div><div class="src-tags"><span class="src-tag">risk</span><span class="src-tag">cycles</span><span class="src-tag">same-day read</span></div></div></div>
+      <div class="src-row"><div class="src-ico" style="background:rgba(167,139,250,0.1)">🌍</div><div><div class="src-name">The Economist</div><div class="src-desc">1–2 articles/week: housing policy, construction costs, interest rates, global capital</div><div class="src-tags"><span class="src-tag">macro</span><span class="src-tag">global capital</span><span class="src-tag">2x/week</span></div></div></div>
+      <div class="src-row"><div class="src-ico" style="background:rgba(167,139,250,0.1)">🎓</div><div><div class="src-name">Peter Linneman Newsletter</div><div class="src-desc">Capital markets, macro outlook, pragmatic RE framing — quarterly letter from the guide's primary source</div><div class="src-tags"><span class="src-tag">capital markets</span><span class="src-tag">quarterly</span></div></div></div>
+      <div class="src-row"><div class="src-ico" style="background:rgba(167,139,250,0.1)">🏛</div><div><div class="src-name">Wharton Real Estate Review</div><div class="src-desc">Institutional capital trends, CMBS, fund structures — academic-practitioner bridge</div><div class="src-tags"><span class="src-tag">CMBS</span><span class="src-tag">fund structures</span><span class="src-tag">monthly</span></div></div></div>
+    </div>
+    <div class="src-section">
+      <div class="src-cadence-label"><div class="cdot" style="background:#f04438"></div>Weekly deep read — 30–45 min</div>
+      <div class="src-row"><div class="src-ico" style="background:rgba(240,68,56,0.08)">🏅</div><div><div class="src-name">Urban Land Institute (ULI)</div><div class="src-desc">Emerging Trends report, development case studies, asset class deep dives — best long-form institutional content</div><div class="src-tags"><span class="src-tag">institutional</span><span class="src-tag">emerging trends</span><span class="src-tag">development</span></div></div></div>
+      <div class="src-row"><div class="src-ico" style="background:rgba(240,68,56,0.08)">📦</div><div><div class="src-name">NAIOP Research Foundation</div><div class="src-desc">Industrial, office, mixed-use reports — institutional language fluency and market data credibility</div><div class="src-tags"><span class="src-tag">industrial</span><span class="src-tag">office</span><span class="src-tag">mixed-use</span></div></div></div>
+      <div class="src-row"><div class="src-ico" style="background:rgba(240,68,56,0.08)">✏️</div><div><div class="src-name">A Student of the REG</div><div class="src-desc">Deal analyses, career frameworks, ongoing RE commentary — source blog for the guide</div><div class="src-tags"><span class="src-tag">deal analysis</span><span class="src-tag">frameworks</span><span class="src-tag">weekly</span></div></div></div>
+      <div class="src-row"><div class="src-ico" style="background:rgba(240,68,56,0.08)">🗺</div><div><div class="src-name">Curbed + local market sites</div><div class="src-desc">Hyperlocal: rezoning, neighborhood shifts, community development — ground-truth texture across all 30 markets</div><div class="src-tags"><span class="src-tag">rezoning</span><span class="src-tag">neighborhoods</span><span class="src-tag">local</span></div></div></div>
+    </div>
+  </div>
+
+  <!-- ── HABITS ── -->
+  <div class="panel" id="panel-habits">
+    <div class="habit-grid">
+      <div class="habit-card"><div class="h-icon" style="background:rgba(62,207,112,0.1)">📁</div><div class="h-title">File 3 articles/day</div><div class="h-sub">1-sentence summary each. Archive by: Macro · Capital Markets · Local Market · Deal Flow · CapEx · Ops</div><div class="h-freq" style="background:rgba(62,207,112,0.08);color:var(--green);border:1px solid rgba(62,207,112,0.2)">Daily</div></div>
+      <div class="habit-card"><div class="h-icon" style="background:rgba(62,207,112,0.1)">✉️</div><div class="h-title">Email 1 contact/day</div><div class="h-sub">New outreach or follow up a dormant contact. Attach a filed article as value-add. Track in CRM.</div><div class="h-freq" style="background:rgba(62,207,112,0.08);color:var(--green);border:1px solid rgba(62,207,112,0.2)">Daily</div></div>
+      <div class="habit-card"><div class="h-icon" style="background:rgba(245,166,35,0.1)">🔢</div><div class="h-title">Underwrite 1 deal/week</div><div class="h-sub">CrowdStreet or RealCrowd memo. Focus on Middle Door target ZIPs. Build assumption discipline.</div><div class="h-freq" style="background:rgba(245,166,35,0.08);color:var(--amber);border:1px solid rgba(245,166,35,0.2)">Weekly</div></div>
+      <div class="habit-card"><div class="h-icon" style="background:rgba(167,139,250,0.1)">🤝</div><div class="h-title">2 events/month</div><div class="h-sub">ULI, NAIOP, Bisnow events. Connect outside your normal circle. Follow up within 48 hrs.</div><div class="h-freq" style="background:rgba(167,139,250,0.08);color:#a78bfa;border:1px solid rgba(167,139,250,0.2)">2×/month</div></div>
+      <div class="habit-card"><div class="h-icon" style="background:rgba(245,166,35,0.1)">🚶</div><div class="h-title">Walk your market</div><div class="h-sub">Ground-truth your thesis. Observe construction, vacancy, aging stock in DFW target ZIPs weekly.</div><div class="h-freq" style="background:rgba(245,166,35,0.08);color:var(--amber);border:1px solid rgba(245,166,35,0.2)">Weekly</div></div>
+      <div class="habit-card"><div class="h-icon" style="background:rgba(62,207,112,0.1)">🔖</div><div class="h-title">Howard Marks — same day</div><div class="h-sub">Read every new Oaktree memo the day it drops. No exceptions — these compound over time.</div><div class="h-freq" style="background:rgba(62,207,112,0.08);color:var(--green);border:1px solid rgba(62,207,112,0.2)">On release</div></div>
+    </div>
+    <div style="margin-top:16px;padding:14px 16px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);font-size:13px;color:var(--text3);line-height:1.7">
+      Compound effect kicks in at 30 days of daily consistency. The article archive becomes your networking superpower — every outreach email gets smarter over time.
+    </div>
+  </div>
+
+  <!-- ── SETTINGS ── -->
+  <div class="panel" id="panel-settings">
+    <div class="settings-card">
+      <h3>Anthropic API Key</h3>
+      <p>Required to generate briefings. Your key is stored in your browser's localStorage — it never leaves your device except to call Anthropic's API directly. You need an Anthropic account with credit enabled (web search costs ~$0.01–0.03 per briefing).</p>
+      <input class="settings-input" type="password" id="settingsKeyInput" placeholder="sk-ant-api03-..." />
+      <div class="key-status none" id="keyStatus">No key saved</div>
+      <div style="display:flex;gap:8px;margin-top:14px">
+        <button class="btn-primary" style="flex:1" onclick="saveSettingsKey()">Save key</button>
+        <button class="btn-ghost" onclick="clearKey()">Remove key</button>
+      </div>
+    </div>
+    <div class="settings-card">
+      <h3>Get your API key</h3>
+      <p>1. Go to <strong style="color:var(--text2)">console.anthropic.com</strong><br>2. Create an account or sign in<br>3. Navigate to API Keys → Create key<br>4. Add $5+ credit under Billing to enable web search</p>
+      <a href="https://console.anthropic.com" target="_blank" class="btn-primary" style="display:inline-flex;align-items:center;gap:6px;text-decoration:none;padding:10px 18px;font-size:13px;border-radius:var(--r);margin-top:4px">
+        Open Anthropic Console ↗
+      </a>
+    </div>
+    <div class="settings-card">
+      <h3>Install as app</h3>
+      <p><strong style="color:var(--text2)">Android:</strong> Open this page in Chrome → tap the 3-dot menu → "Add to Home screen"<br><br><strong style="color:var(--text2)">Desktop (Chrome/Edge):</strong> Look for the install icon in the address bar, or go to Settings → "Install page as app"<br><br><strong style="color:var(--text2)">iOS Safari:</strong> Tap the Share icon → "Add to Home Screen"</p>
+    </div>
+  </div>
+
+</main>
+</div>
+
+<script>
+// ── DATA ──
+const MARKETS = [
+  {rank:1,name:"DFW – Dallas/Fort Worth",state:"TX",score:91,rent:"$1,400–$1,580",comp:"Moderate",stars:5,fit:"★★★★★",zips:"75041 · 75042 · 75211"},
+  {rank:2,name:"Chicago",state:"IL",score:89,rent:"$1,600–$2,100",comp:"Moderate",stars:5,fit:"★★★★★",zips:"60630 · 60641 · 60639"},
+  {rank:3,name:"Houston",state:"TX",score:87,rent:"$1,100–$1,500",comp:"Low–Moderate",stars:4,fit:"★★★★",zips:"77051 · 77033 · 77076"},
+  {rank:4,name:"San Antonio",state:"TX",score:88,rent:"$900–$1,350",comp:"Low",stars:4,fit:"★★★★",zips:"78207 · 78210 · 78201"},
+  {rank:5,name:"Indianapolis",state:"IN",score:90,rent:"$1,000–$1,300",comp:"Low",stars:4,fit:"★★★★",zips:"46201 · 46218 · 46203"},
+  {rank:6,name:"Columbus",state:"OH",score:88,rent:"$1,000–$1,350",comp:"Low–Moderate",stars:4,fit:"★★★★",zips:"43205 · 43207 · 43223"},
+  {rank:7,name:"Kansas City",state:"MO",score:89,rent:"$950–$1,250",comp:"Low",stars:4,fit:"★★★★",zips:"64130 · 64128 · 64127"},
+  {rank:8,name:"Milwaukee",state:"WI",score:88,rent:"$900–$1,200",comp:"Very Low",stars:4,fit:"★★★★",zips:"53206 · 53212 · 53215"},
+  {rank:9,name:"Cincinnati",state:"OH",score:86,rent:"$950–$1,250",comp:"Very Low",stars:4,fit:"★★★★",zips:"45205 · 45206 · 45215"},
+  {rank:10,name:"Cleveland",state:"OH",score:82,rent:"$800–$1,100",comp:"Very Low",stars:3,fit:"★★★",zips:"44105 · 44109 · 44102"},
+  {rank:11,name:"St. Louis",state:"MO",score:83,rent:"$850–$1,150",comp:"Very Low",stars:3,fit:"★★★",zips:"63115 · 63118 · 63116"},
+  {rank:12,name:"Charlotte",state:"NC",score:84,rent:"$1,300–$1,700",comp:"Moderate",stars:4,fit:"★★★★",zips:"28208 · 28206 · 28216"},
+  {rank:13,name:"Jacksonville",state:"FL",score:86,rent:"$1,200–$1,550",comp:"Low–Moderate",stars:4,fit:"★★★★",zips:"32209 · 32254 · 32208"},
+  {rank:14,name:"Memphis",state:"TN",score:83,rent:"$900–$1,200",comp:"Very Low",stars:3,fit:"★★★",zips:"38109 · 38128 · 38111"},
+  {rank:15,name:"Birmingham",state:"AL",score:82,rent:"$900–$1,150",comp:"Very Low",stars:3,fit:"★★★",zips:"35208 · 35211 · 35206"},
+  {rank:16,name:"Louisville",state:"KY",score:83,rent:"$950–$1,250",comp:"Low",stars:3,fit:"★★★",zips:"40211 · 40210 · 40215"},
+  {rank:17,name:"Atlanta",state:"GA",score:80,rent:"$1,400–$1,800",comp:"High (urban)",stars:3,fit:"★★★",zips:"30354 · 30315 · 30310"},
+  {rank:18,name:"Tampa",state:"FL",score:79,rent:"$1,500–$1,900",comp:"Moderate–High",stars:3,fit:"★★★",zips:"33605 · 33610 · 33604"},
+  {rank:19,name:"Phoenix",state:"AZ",score:80,rent:"$1,400–$1,700",comp:"Moderate",stars:3,fit:"★★★",zips:"85031 · 85033 · 85040"},
+  {rank:20,name:"Las Vegas",state:"NV",score:84,rent:"$1,300–$1,600",comp:"Low–Moderate",stars:4,fit:"★★★★",zips:"89101 · 89104 · 89115"},
+  {rank:21,name:"Raleigh-Durham",state:"NC",score:79,rent:"$1,400–$1,800",comp:"Moderate",stars:3,fit:"★★★",zips:"27704 · 27703 · 27610"},
+  {rank:22,name:"Oklahoma City",state:"OK",score:88,rent:"$900–$1,150",comp:"Very Low",stars:4,fit:"★★★★",zips:"73108 · 73109 · 73107"},
+  {rank:23,name:"Tulsa",state:"OK",score:85,rent:"$850–$1,100",comp:"Very Low",stars:3,fit:"★★★",zips:"74106 · 74107 · 74112"},
+  {rank:24,name:"Nashville",state:"TN",score:78,rent:"$1,400–$1,900",comp:"Moderate–High",stars:3,fit:"★★★",zips:"37207 · 37211 · 37208"},
+  {rank:25,name:"Albuquerque",state:"NM",score:87,rent:"$1,000–$1,300",comp:"Very Low",stars:4,fit:"★★★★",zips:"87105 · 87102 · 87108"},
+  {rank:26,name:"Salt Lake City",state:"UT",score:78,rent:"$1,400–$1,800",comp:"Low–Moderate",stars:3,fit:"★★★",zips:"84104 · 84119 · 84106"},
+  {rank:27,name:"Omaha",state:"NE",score:87,rent:"$1,000–$1,300",comp:"Very Low",stars:4,fit:"★★★★",zips:"68104 · 68107 · 68108"},
+  {rank:28,name:"Little Rock",state:"AR",score:88,rent:"$900–$1,150",comp:"Very Low",stars:4,fit:"★★★★",zips:"72204 · 72206 · 72205"},
+  {rank:29,name:"Boise/Treasure Valley",state:"ID",score:77,rent:"$1,200–$1,600",comp:"Low",stars:3,fit:"★★★",zips:"83705 · 83651 · 83709"},
+  {rank:30,name:"Knoxville",state:"TN",score:88,rent:"$950–$1,250",comp:"Very Low",stars:4,fit:"★★★★",zips:"37917 · 37920 · 37921"},
+];
+
+const MODES = {
+  morning:{label:"Morning Brief",sources:"CoStar News, Bisnow DFW/Texas, GlobeSt.com, WSJ Real Estate",prompt:"Focus on: new CRE transactions in small multifamily (2–50 units), cap rate moves in Midwest/Sunbelt/Southeast landlord-friendly markets, DFW local deals and people moves, value-add deal flow in workforce housing, REIT signals, Fed policy implications for small MF acquisitions. Include any specific DFW submarket developments."},
+  midday:{label:"Midday Brief",sources:"The Real Deal, CBRE market data, Marcus & Millichap research, CrowdStreet/RealCrowd deal memos",prompt:"Focus on: how sponsors are structuring small MF acquisitions (2–50 units) in Midwest and Sunbelt markets, multifamily comp data and cap rate trends in workforce housing, mid-market pricing, aging landlord deal flow, themes in live deal memos (assumptions, structures, risk disclosures), fragmented ownership market signals."},
+  evening:{label:"Evening Brief",sources:"Howard Marks/Oaktree memos, The Economist, Peter Linneman newsletter, Wharton Real Estate Review",prompt:"Focus on: cycle positioning and risk psychology relevant to small MF investing, housing policy and construction cost macro trends affecting landlord-friendly states, global capital flow implications for Midwest/Sunbelt multifamily, institutional capital and debt market developments relevant to 2–50 unit deals."},
+  weekly:{label:"Weekly Deep Read",sources:"Urban Land Institute (ULI), NAIOP Research Foundation, A Student of the REG blog, Curbed and local market sites",prompt:"Focus on: ULI emerging trends affecting small multifamily and workforce housing, NAIOP research relevant to supply/demand dynamics, deal analysis frameworks from practitioners, rezoning and neighborhood transformation signals in Midwest and Sunbelt metros, community development shifts in target submarkets."},
+};
+
+const MKT_CONTEXT = "DFW TX, Chicago IL, Houston TX, San Antonio TX, Indianapolis IN, Columbus OH, Kansas City MO, Milwaukee WI, Cincinnati OH, Cleveland OH, St Louis MO, Charlotte NC, Jacksonville FL, Memphis TN, Birmingham AL, Louisville KY, Atlanta GA, Tampa FL, Phoenix AZ, Las Vegas NV, Raleigh-Durham NC, Oklahoma City OK, Tulsa OK, Nashville TN, Albuquerque NM, Salt Lake City UT, Omaha NE, Little Rock AR, Boise ID, Knoxville TN";
+
+// ── STATE ──
+let currentMode = 'morning';
+let selectedMkts = [];
+let apiKey = localStorage.getItem('md_api_key') || '';
+
+// ── INIT ──
+document.getElementById('datePill').textContent = new Date().toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
+updateKeyUI();
+
+const sel = document.getElementById('mktSel');
+MARKETS.forEach(m => {
+  const o = document.createElement('option');
+  o.value = m.name;
+  o.textContent = `#${m.rank} ${m.name}, ${m.state}`;
+  sel.appendChild(o);
+});
+renderMarkets();
+
+// ── TABS ──
+function sw(id, btn) {
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('panel-' + id).classList.add('active');
+}
+
+// ── API KEY ──
+function openModal() { document.getElementById('modalOverlay').classList.add('open'); document.getElementById('modalKeyInput').value = apiKey; }
+function closeModal() { document.getElementById('modalOverlay').classList.remove('open'); }
+function saveKey() {
+  const v = document.getElementById('modalKeyInput').value.trim();
+  if (!v) return;
+  apiKey = v; localStorage.setItem('md_api_key', v);
+  updateKeyUI(); closeModal();
+}
+function saveSettingsKey() {
+  const v = document.getElementById('settingsKeyInput').value.trim();
+  if (!v) return;
+  apiKey = v; localStorage.setItem('md_api_key', v);
+  updateKeyUI();
+}
+function clearKey() {
+  apiKey = ''; localStorage.removeItem('md_api_key');
+  document.getElementById('settingsKeyInput').value = '';
+  updateKeyUI();
+}
+function updateKeyUI() {
+  const badge = document.getElementById('apiToggle');
+  const status = document.getElementById('keyStatus');
+  const si = document.getElementById('settingsKeyInput');
+  if (apiKey) {
+    badge.textContent = '✓ Key set'; badge.className = 'api-badge set';
+    if (status) { status.textContent = 'Key saved ✓'; status.className = 'key-status ok'; }
+    if (si) si.value = apiKey;
+  } else {
+    badge.textContent = '⚙ API Key'; badge.className = 'api-badge unset';
+    if (status) { status.textContent = 'No key saved'; status.className = 'key-status none'; }
+  }
+}
+
+// ── MARKETS ──
+function selMode(el) {
+  document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('sel'));
+  el.classList.add('sel');
+  currentMode = el.dataset.mode;
+}
+function addMkt(v) {
+  if (!v || selectedMkts.includes(v) || selectedMkts.length >= 5) { sel.value = ''; return; }
+  selectedMkts.push(v); renderSelMkts(); sel.value = '';
+}
+function removeMkt(v) { selectedMkts = selectedMkts.filter(x => x !== v); renderSelMkts(); }
+function clearMkts() { selectedMkts = []; renderSelMkts(); }
+function renderSelMkts() {
+  document.getElementById('selMktList').innerHTML = selectedMkts.map(m =>
+    `<span class="sel-mkt-pill">${m}<button onclick="removeMkt('${m.replace(/'/g,"\\'")}')">✕</button></span>`
+  ).join('');
+}
+
+function renderMarkets() {
+  document.getElementById('mktGrid').innerHTML = MARKETS.map(m => `
+    <div class="mkt-card" data-state="${m.state}" data-stars="${m.stars}">
+      <div class="mkt-card-top"><span class="mkt-rank">#${m.rank}</span><span class="mkt-stars">${m.fit}</span></div>
+      <div class="mkt-name">${m.name}</div>
+      <div class="mkt-state">${m.state} · Score ${m.score}/100</div>
+      <div class="score-bar"><div class="score-fill" style="width:${m.score}%"></div></div>
+      <div class="mkt-row"><span class="mkt-key">2BR rent</span><span class="mkt-val">${m.rent}</span></div>
+      <div class="mkt-row"><span class="mkt-key">Competition</span><span class="mkt-val">${m.comp}</span></div>
+      <div class="mkt-zips">▶ ${m.zips}</div>
+    </div>`).join('');
+}
+function filt(f, btn) {
+  document.querySelectorAll('.f-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.mkt-card').forEach(c => {
+    const s = c.dataset.state, stars = parseInt(c.dataset.stars);
+    let show = true;
+    if (f === '5star') show = stars === 5;
+    else if (f === '4star') show = stars === 4;
+    else if (f !== 'all') show = s === f;
+    c.style.display = show ? '' : 'none';
+  });
+}
+
+// ── BRIEFING ──
+async function runBriefing() {
+  if (!apiKey) { openModal(); return; }
+  const mode = MODES[currentMode];
+  const focusMkts = selectedMkts.length > 0 ? selectedMkts : null;
+  const mktLine = focusMkts
+    ? `Focus especially on these markets from the target 30: ${focusMkts.join(', ')}.`
+    : `The target market universe is the Middle Door Top 30 landlord-friendly markets: ${MKT_CONTEXT}.`;
+
+  const btn = document.getElementById('genBtn');
+  const statusBar = document.getElementById('statusBar');
+  const statusTxt = document.getElementById('statusTxt');
+  const errBar = document.getElementById('errBar');
+  const briefOut = document.getElementById('briefOut');
+
+  btn.disabled = true;
+  statusBar.style.display = 'flex';
+  errBar.style.display = 'none';
+  briefOut.style.display = 'none';
+  briefOut.innerHTML = '';
+
+  const msgs = [
+    'Scanning ' + mode.sources.split(',')[0].trim() + '...',
+    'Pulling cap rate and vacancy signals...',
+    'Cross-referencing target market data...',
+    'Synthesizing landlord-friendly market news...',
+    'Formatting your briefing...',
+  ];
+  let si = 0;
+  const iv = setInterval(() => { si = (si + 1) % msgs.length; statusTxt.textContent = msgs[si]; }, 2200);
+
+  const today = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+
+  const systemPrompt = `You are a senior real estate intelligence analyst for Middle Door, a small multifamily acquisition platform targeting 2–50 unit buildings in landlord-friendly US markets. The audience is a DFW-based RE professional focused on workforce housing, fragmented ownership, and direct-to-owner outreach. Today is ${today}.
+
+Strategy: Middle Door targets small MF (2–50 units) in 30 landlord-friendly markets. Key filters: no rent control, fast eviction process, aging landlord base, workforce housing demand, low institutional competition. Primary states: TX, IN, OH, MO, WI, NC, FL, AL, KY, GA, AZ, NV, OK, NM, UT, NE, AR, ID, TN, IL.
+
+Source stack for this ${mode.label}: ${mode.sources}.
+${mktLine}
+
+Search the web for the most current news before generating your briefing.
+
+Return ONLY a JSON object (no markdown, no backticks, no preamble):
+{
+  "headline": "8-12 word punchy headline capturing the biggest story relevant to small MF today",
+  "sections": [
+    {
+      "emoji": "single relevant emoji",
+      "color": "green|amber|red|purple|blue",
+      "label": "Section title (4-6 words)",
+      "snippet": "One teaser sentence under 12 words",
+      "impact": "high|medium|low",
+      "tags": ["tag1","tag2","tag3"],
+      "body": "2-4 paragraphs grounded in real current news. Include specific percentages, named deals, named markets from the target 30, specific ZIPs where relevant, and concrete implications for Middle Door-style 2–50 unit acquisition strategy."
+    }
+  ]
+}
+
+Generate 4-5 sections. Every section must have a concrete implication for small multifamily acquisitions in landlord-friendly markets.`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-calls': 'true',
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: systemPrompt,
+        tools: [{ type: 'web_search_20250305', name: 'web_search' }],
+        messages: [{ role: 'user', content: `Generate the ${mode.label}. ${mode.prompt} Search for the latest news from ${today}, then produce the JSON.` }],
+      })
+    });
+
+    const data = await res.json();
+    clearInterval(iv);
+    if (!res.ok) throw new Error(data.error?.message || `HTTP ${res.status}`);
+
+    const txt = data.content.filter(b => b.type === 'text').map(b => b.text).join('');
+    const clean = txt.replace(/```json|```/g, '').trim();
+    let brief;
+    try { brief = JSON.parse(clean); }
+    catch (e) { const m = clean.match(/\{[\s\S]*\}/); if (m) brief = JSON.parse(m[0]); else throw new Error('Could not parse response JSON.'); }
+
+    renderBrief(brief, mode.label, today, focusMkts);
+  } catch (e) {
+    clearInterval(iv);
+    errBar.textContent = '⚠ ' + e.message;
+    errBar.style.display = 'block';
+  } finally {
+    btn.disabled = false;
+    statusBar.style.display = 'none';
+  }
+}
+
+const cmap = {
+  green: { bg: 'rgba(62,207,112,0.12)', c: '#3ecf70' },
+  amber: { bg: 'rgba(245,166,35,0.12)', c: '#f5a623' },
+  red:   { bg: 'rgba(240,68,56,0.12)',  c: '#f97066' },
+  purple:{ bg: 'rgba(167,139,250,0.12)',c: '#a78bfa' },
+  blue:  { bg: 'rgba(96,165,250,0.12)', c: '#60a5fa' },
+};
+const impCls = { high: 'p-high', medium: 'p-med', low: 'p-low' };
+
+function renderBrief(data, modeLabel, dateStr, mkts) {
+  const out = document.getElementById('briefOut');
+  out.style.display = 'block';
+  const mktNote = mkts ? ` · ${mkts.slice(0,3).join(', ')}${mkts.length > 3 ? '…' : ''}` : ' · All 30 markets';
+  let html = `
+    <div class="brief-headline">${data.headline}</div>
+    <div class="brief-meta">${modeLabel} · ${dateStr}${mktNote}</div>
+  `;
+
+  (data.sections || []).forEach((s, i) => {
+    const c = cmap[s.color] || cmap.green;
+    const tags = (s.tags || []).map(t => `<span class="pill p-tag">${t}</span>`).join('');
+    const paras = (s.body || '').split('\n').filter(Boolean).map(p => `<p>${p}</p>`).join('');
+    const q = `Dive deeper: "${s.label}" — specific implications for Middle Door 2–50 unit acquisitions in landlord-friendly markets?`;
+
+    html += `
+      <div class="b-section">
+        <div class="b-hdr" id="bh${i}" onclick="tog(${i})">
+          <div class="b-left">
+            <div class="b-ico" style="background:${c.bg};font-size:16px">${s.emoji || '🏢'}</div>
+            <div>
+              <div class="b-label">${s.label}</div>
+              <div class="b-snip">${s.snippet}</div>
+            </div>
+          </div>
+          <svg class="b-chev" id="bc${i}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div class="b-body" id="bb${i}">
+          ${paras}
+          <div class="pill-row">
+            <span class="pill ${impCls[s.impact] || 'p-med'}">${s.impact || 'medium'} impact</span>
+            ${tags}
+          </div>
+          <button class="ask-btn" onclick="window.open('https://claude.ai/new?q=${encodeURIComponent(q)}','_blank')">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+            Ask Claude ↗
+          </button>
+        </div>
+      </div>`;
+  });
+
+  out.innerHTML = html;
+}
+
+function tog(i) {
+  const b = document.getElementById('bb' + i);
+  const c = document.getElementById('bc' + i);
+  const h = document.getElementById('bh' + i);
+  const o = b.classList.toggle('open');
+  c.classList.toggle('open', o);
+  h.classList.toggle('open', o);
+}
+</script>
+</body>
+</html>
